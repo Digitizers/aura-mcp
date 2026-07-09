@@ -1,4 +1,4 @@
-# aura-mcp — Aura control-plane Claude skill
+# Aura MCP — Aura control-plane Claude skill
 
 ![Claude Code Skill](https://img.shields.io/badge/Claude_Code-Skill-d97757)
 ![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-purple)
@@ -59,6 +59,7 @@ aura-mcp/
 1. **Mint a management token** — Aura → **Fleet** → Agent Tokens → check **"allow manage"**
    (`canManage`). Copy the `aura_…` token (shown once).
 2. **Wire an MCP client** — point it at the gateway with the token:
+
    ```json
    {
      "mcpServers": {
@@ -70,6 +71,7 @@ aura-mcp/
      }
    }
    ```
+
 3. **Verify** — ask Claude to run `aura__client_summary`. Counts back = connected.
 
 Full steps (Claude Code / Desktop / Cursor, scoping, high-risk-write opt-in):
