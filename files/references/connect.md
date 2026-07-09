@@ -20,7 +20,14 @@ explicit confirmation.
    - `aura__rollback_run`
    - `aura__approve_action` (also needs org opt-in — see [safety.md](safety.md))
 
-   Leave allowed-tools empty for a read-only + `reject_action` token (the safe default).
+   **A read-only token must use an explicit allow-list — do NOT leave it empty.** An empty
+   `allowedTools` means *unrestricted*: a `canManage` token can then call every read **and
+   mutating** fleet tool it can reach (site / infra / content ops), excepting only the three
+   high-risk `aura__*` writes listed above. For a genuinely read-only (+ deny) token, allow-list
+   only the read tools you need — `aura__list_pending_approvals`, `aura__get_action`,
+   `aura__list_snapshots`, `aura__list_connections`, `aura__list_runs`, `aura__client_summary` —
+   plus `aura__reject_action` (deny-only, can never execute). Leave `allowedTools` empty **only**
+   for a fully-trusted operator token that is meant to run everything.
 6. **Copy the token** — it's shown **once**, in the form `aura_` followed by 48 hex
    characters. Store it in a secret manager, not in a committed file.
 

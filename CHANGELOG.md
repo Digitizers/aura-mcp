@@ -5,6 +5,16 @@ All notable changes to the **aura-mcp** skill are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this kit tracks
 the `aura__*` control-plane tool surface shipped by the Aura fleet gateway.
 
+## [0.1.1] — 2026-07-10
+
+### Fixed
+
+- **Security guidance:** the "read-only / reject-only" token recipe told users to leave
+  `allowedTools` **empty** — but empty means *unrestricted*, so a `canManage` token could then
+  reach every mutating fleet tool (site / infra / content), not just reads. `connect.md` and
+  `QUICKSTART.md` now require an **explicit allow-list** of the read tools + `aura__reject_action`
+  for a read-only token, and reserve the empty allow-list for a fully-trusted operator token.
+
 ## [0.1.0] — 2026-07-09
 
 Initial public release — the P5 (distribution) step of the aura-mcp plan: a skill + thin

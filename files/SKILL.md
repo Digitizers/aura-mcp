@@ -1,6 +1,6 @@
 ---
 name: aura-mcp
-version: 0.1.0
+version: 0.1.1
 license: MIT
 description: Drive your Aura agency control plane from Claude — approvals, snapshots, connections, runs — over the Aura MCP gateway. Teaches the `aura__*` control-plane tools (list_pending_approvals, get_action, list_snapshots, list_connections, list_runs, client_summary, reject_action, restore_snapshot, rollback_run, approve_action) and the connect flow: mint a `canManage` management token in Aura, point an MCP HTTP client at the fleet gateway, and read/govern the agency itself — not just the managed sites. This is a thin connector, not a standalone server: all auth, policy, approval-gating, and audit live in the Aura gateway (single enforcement point). Requires an Aura account (app.my-aura.app) — no standalone value without one. Use when the user references Aura, aura-mcp, the Aura control plane, `/aura-mcp`, or runs `aura__*` tools; covers minting a management token, wiring the MCP client config, and the governance/safety model (human-tap approvals by default, self-approval guard, client-wide-only reverts). SKIP for the outward site/builder/content/infra tools (those are the fleet gateway's other tool groups), and for non-Aura MCP work.
 permissions:
