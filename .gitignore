@@ -1,0 +1,10 @@
+# Secrets — never commit a management token
+.mcp.json
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
