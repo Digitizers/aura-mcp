@@ -7,7 +7,9 @@
 Aura → **Fleet** → **Agent Tokens** → new token → check **"allow manage"** → **Copy** the
 `aura_…` token (shown once).
 
-- Read-only / reject-only? Leave allowed-tools empty.
+- Read-only / reject-only? **Explicitly allow-list** the read tools + `aura__reject_action` —
+  do NOT leave allowed-tools empty (empty = *unrestricted*, i.e. mutating fleet access too). See
+  [connect.md](../files/references/connect.md) step 5.
 - Want reverts or machine-approve? See step 4.
 
 ## 2. Add the MCP config (1 min)

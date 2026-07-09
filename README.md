@@ -4,7 +4,7 @@
 ![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-purple)
 ![Aura](https://img.shields.io/badge/Aura-control_plane-6d28d9)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Version](https://img.shields.io/badge/version-0.1.1-blue)
 
 Drive your **Aura agency control plane from Claude** — approvals, snapshots, connections,
 runs — over MCP. Not the managed sites (the fleet's other tools already do those): **Aura
