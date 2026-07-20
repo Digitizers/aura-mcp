@@ -1,0 +1,9 @@
+{
+  "name": "aura-mcp",
+  "displayName": "Aura MCP",
+  "description": "Aura control-plane skill — drive approvals, snapshots, restores, and governed WordPress operations through the Aura/SiteAgent stack.",
+  "author": {
+    "name": "Ben Kalsky",
+    "email": "benkalsky@gmail.com"
+  }
+}
