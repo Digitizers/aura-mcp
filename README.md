@@ -113,3 +113,11 @@ logic stays in Aura.
 
 MIT — for this skill kit (the docs and config that teach Claude the tools). Aura itself is a
 separate hosted product. The `aura__*` tools are served by your Aura account's gateway.
+
+### Windows note
+
+The plugin ships its skill through a git **symlink** (`skills/` → the in-repo
+source). Cloning with `core.symlinks=false` — the default on many Windows
+setups — turns that link into a plain text file and the skill will not load.
+Before installing on Windows, enable Developer Mode and run
+`git config --global core.symlinks true`, or use WSL. macOS/Linux need nothing.
