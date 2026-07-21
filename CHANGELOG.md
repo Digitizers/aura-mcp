@@ -17,12 +17,15 @@ the `aura__*` control-plane tool surface shipped by the Aura fleet gateway.
   the connection then just shows as unavailable until the token is provided (an unset `${VAR}`
   with no default would fail the whole config parse). `.mcp.json` left `.gitignore` (the
   tracked file must never contain a real token); `.claude/settings.json` sets
-  `enableAllProjectMcpServers` so the committed config is auto-approved.
+  `enableAllProjectMcpServers` so the committed config is auto-approved once the folder is
+  trusted — in untrusted checkouts Claude Code deliberately ignores the committed key
+  (settings not checked into the repo only, as of v2.1.196) and prompts once.
 - **Every onboarding path now teaches the env-var route** (Codex round-1 P1): QUICKSTART §2,
   `connect.md`, `safety.md` token hygiene, and the SKILL frontmatter no longer direct users to
   paste a token into `.mcp.json` + gitignore it — that flow is unsafe now that the file is
-  tracked. Inline-token configs remain only for clients without env expansion
-  (Desktop/Cursor), with an explicit keep-out-of-version-control warning.
+  tracked. Inline-token configs remain only for clients without env interpolation
+  (Claude Desktop), with an explicit keep-out-of-version-control warning; Cursor uses
+  `${env:AURA_MCP_TOKEN}`.
 - **Token env var standardized as `AURA_MCP_TOKEN`** (was `AURA_MANAGEMENT_TOKEN` in the SKILL
   frontmatter).
 
