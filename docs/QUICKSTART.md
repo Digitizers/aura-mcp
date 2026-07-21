@@ -12,20 +12,17 @@ Aura → **Fleet** → **Agent Tokens** → new token → check **"allow manage"
   [connect.md](../files/references/connect.md) step 5.
 - Want reverts or machine-approve? See step 4.
 
-## 2. Add the MCP config (1 min)
-Claude Code — `.mcp.json` in your project root (then add it to `.gitignore`):
-```json
-{
-  "mcpServers": {
-    "aura": {
-      "type": "http",
-      "url": "https://app.my-aura.app/api/mcp/fleet",
-      "headers": { "Authorization": "Bearer aura_YOUR_MANAGEMENT_TOKEN" }
-    }
-  }
-}
+## 2. Supply the token (1 min)
+Claude Code — export the token as an environment variable; never write it into a tracked file:
+```bash
+export AURA_MCP_TOKEN=aura_YOUR_MANAGEMENT_TOKEN
 ```
-Desktop / Cursor variants: [`../files/references/connect.md`](../files/references/connect.md).
+In **this repo's clone** (and claude.ai cloud environments that set the variable) the committed
+placeholder-only `.mcp.json` picks it up automatically. In **your own project**, commit the
+same placeholder config (`"Authorization": "Bearer ${AURA_MCP_TOKEN:-}"`) and keep the token
+in the environment — see [`../files/references/connect.md`](../files/references/connect.md)
+for the full config plus the Desktop / Cursor variants (those clients need the token inline —
+keep their config files out of version control).
 
 ## 3. Verify (30 s)
 Ask Claude: *"run aura__client_summary"*. Counts back → connected. No `aura__*` tools →

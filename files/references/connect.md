@@ -40,10 +40,12 @@ with `Authorization: Bearer aura_…`. On a management token, `tools/list` inclu
 ### Claude Code — env var (zero-config, devices and cloud sessions)
 
 This repo commits a placeholder-only `.mcp.json` whose `Authorization` header reads
-`Bearer ${AURA_MCP_TOKEN}`. Set that variable — in your shell profile on a device, or in the
+`Bearer ${AURA_MCP_TOKEN:-}`. Set that variable — in your shell profile on a device, or in the
 claude.ai cloud environment's environment variables for web/phone sessions — and the `aura`
-connection starts automatically; unset, the server is skipped silently. Never put a real token
-in the tracked `.mcp.json`. Cloud environments with a restricted network policy must allow
+connection authenticates automatically. While the variable is unset the config still parses
+(the `:-` default), but the connection can't authenticate and shows as unavailable in `/mcp` —
+that's expected until you provide the token. Never put a real token in the tracked
+`.mcp.json`. Cloud environments with a restricted network policy must allow
 `app.my-aura.app`.
 
 In a project of your own, the equivalent explicit config is:
@@ -62,7 +64,7 @@ In a project of your own, the equivalent explicit config is:
 }
 ```
 If you inline a real token like this, keep that `.mcp.json` out of version control
-(gitignore it) — or better, keep the `${AURA_MCP_TOKEN}` placeholder and export the
+(gitignore it) — or better, keep the `${AURA_MCP_TOKEN:-}` placeholder and export the
 token in your environment.
 
 ### Claude Desktop — `claude_desktop_config.json`

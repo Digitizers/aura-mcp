@@ -50,5 +50,7 @@ never returned by any tool.
 - Mint management tokens sparingly and short-lived; they are your highest-privilege tokens.
 - Give a token only the allowed-tools it needs — don't add `approve_action` to a token that
   only needs to reject.
-- Store the `aura_` token in a secret manager; never commit it. The skill's config writes go
-  to `.gitignore`.
+- Store the `aura_` token in a secret manager or environment variable (`AURA_MCP_TOKEN`);
+  never commit it. Tracked config files carry only `${AURA_MCP_TOKEN:-}` placeholders; any
+  client config that must embed the token inline (Desktop/Cursor) stays out of version
+  control.

@@ -7,10 +7,10 @@ permissions:
   network:
     - "The Aura fleet MCP gateway over HTTPS (default https://app.my-aura.app/api/mcp/fleet) — JSON-RPC tools/list + tools/call, authenticated by a Bearer aura_ management token. No other host is contacted."
   filesystem:
-    - "Writes an MCP client config (.mcp.json in the current working directory, or the client's config file) that embeds the aura_ management token; appends .mcp.json to .gitignore there."
+    - "May write an MCP client config (.mcp.json with a ${AURA_MCP_TOKEN:-} placeholder in the current working directory, or the client's config file). Only non-Claude-Code clients (Desktop/Cursor) get the token inline — those config files must stay out of version control."
   env:
     - "AURA_MCP_URL (optional — override the gateway URL; defaults to https://app.my-aura.app/api/mcp/fleet)"
-    - "AURA_MANAGEMENT_TOKEN (optional — supply the aura_ management token instead of pasting it into the config)"
+    - "AURA_MCP_TOKEN (the aura_ management token — preferred over pasting it into any config file)"
 ---
 
 # Aura MCP — control-plane skill

@@ -1,11 +1,11 @@
 {
-  "_comment": "Committed connection config — env-var placeholders ONLY, never a real token (tracked file). The gateway connection starts when AURA_MCP_TOKEN is set (an aura_... management token minted in Aura → Fleet → Agent Tokens): on devices via the shell env, in claude.ai cloud environments via the environment's env vars. Unset, the server is skipped silently. See files/references/connect.md for token minting, scoping, and the high-risk-write opt-in.",
+  "_comment": "Committed connection config — env-var placeholders ONLY, never a real token (tracked file). The gateway connection authenticates when AURA_MCP_TOKEN is set (an aura_... management token minted in Aura → Fleet → Agent Tokens): on devices via the shell env, in claude.ai cloud environments via the environment's env vars. The :- default keeps the config parseable when the variable is unset — the connection then simply fails auth and shows as unavailable in /mcp until the token is provided. See files/references/connect.md for token minting, scoping, and the high-risk-write opt-in.",
   "mcpServers": {
     "aura": {
       "type": "http",
       "url": "https://app.my-aura.app/api/mcp/fleet",
       "headers": {
-        "Authorization": "Bearer ${AURA_MCP_TOKEN}"
+        "Authorization": "Bearer ${AURA_MCP_TOKEN:-}"
       }
     }
   }

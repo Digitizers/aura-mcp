@@ -75,8 +75,9 @@ aura-mcp/
    **Zero-config alternative:** the repo commits a placeholder-only [`.mcp.json`](.mcp.json)
    that reads the token from the `AURA_MCP_TOKEN` environment variable — set it in your shell
    (devices) or in the claude.ai cloud environment's env vars (web/phone sessions) and the
-   connection comes up on its own; unset, the server simply doesn't start. Real tokens never
-   go into the file — it is tracked in git.
+   connection authenticates on its own. While the variable is unset the connection just shows
+   as unavailable in `/mcp` (it can't authenticate) — set the var to bring it up. Real tokens
+   never go into the file — it is tracked in git.
 
 3. **Verify** — ask Claude to run `aura__client_summary`. Counts back = connected.
 
