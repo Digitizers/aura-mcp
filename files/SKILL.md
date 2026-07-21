@@ -7,7 +7,7 @@ permissions:
   network:
     - "The Aura fleet MCP gateway over HTTPS (default https://app.my-aura.app/api/mcp/fleet) — JSON-RPC tools/list + tools/call, authenticated by a Bearer aura_ management token. No other host is contacted."
   filesystem:
-    - "May write an MCP client config (.mcp.json with a ${AURA_MCP_TOKEN:-} placeholder in the current working directory, or the client's config file). Only non-Claude-Code clients (Desktop/Cursor) get the token inline — those config files must stay out of version control."
+    - "May write an MCP client config (.mcp.json with a ${AURA_MCP_TOKEN:-} placeholder in the current working directory, or the client's config file). Cursor configs use ${env:AURA_MCP_TOKEN} interpolation; only clients without env interpolation (Claude Desktop) get the token inline — those config files must stay out of version control."
   env:
     - "AURA_MCP_URL (optional — override the gateway URL; defaults to https://app.my-aura.app/api/mcp/fleet)"
     - "AURA_MCP_TOKEN (the aura_ management token — preferred over pasting it into any config file)"

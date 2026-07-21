@@ -82,12 +82,16 @@ token in your environment.
 ```
 
 ### Cursor — `.cursor/mcp.json`
+
+Cursor interpolates environment variables in MCP config with `${env:VAR}` — use it so the
+token stays out of the file:
+
 ```json
 {
   "mcpServers": {
     "aura": {
       "url": "https://app.my-aura.app/api/mcp/fleet",
-      "headers": { "Authorization": "Bearer aura_YOUR_MANAGEMENT_TOKEN" }
+      "headers": { "Authorization": "Bearer ${env:AURA_MCP_TOKEN}" }
     }
   }
 }

@@ -21,8 +21,9 @@ In **this repo's clone** (and claude.ai cloud environments that set the variable
 placeholder-only `.mcp.json` picks it up automatically. In **your own project**, commit the
 same placeholder config (`"Authorization": "Bearer ${AURA_MCP_TOKEN:-}"`) and keep the token
 in the environment — see [`../files/references/connect.md`](../files/references/connect.md)
-for the full config plus the Desktop / Cursor variants (those clients need the token inline —
-keep their config files out of version control).
+for the full config plus the Desktop / Cursor variants. Cursor interpolates the env var too
+(`${env:AURA_MCP_TOKEN}`); only Claude Desktop needs the token inline — keep its config file
+out of version control.
 
 ## 3. Verify (30 s)
 Ask Claude: *"run aura__client_summary"*. Counts back → connected. No `aura__*` tools →
