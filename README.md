@@ -4,7 +4,7 @@
 ![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-purple)
 ![Aura](https://img.shields.io/badge/Aura-control_plane-6d28d9)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/version-0.1.1-blue)
+![Version](https://img.shields.io/badge/version-0.2.0-blue)
 
 Drive your **Aura agency control plane from Claude** — approvals, snapshots, connections,
 runs — over MCP. Not the managed sites (the fleet's other tools already do those): **Aura
@@ -71,6 +71,12 @@ aura-mcp/
      }
    }
    ```
+
+   **Zero-config alternative:** the repo commits a placeholder-only [`.mcp.json`](.mcp.json)
+   that reads the token from the `AURA_MCP_TOKEN` environment variable — set it in your shell
+   (devices) or in the claude.ai cloud environment's env vars (web/phone sessions) and the
+   connection comes up on its own; unset, the server simply doesn't start. Real tokens never
+   go into the file — it is tracked in git.
 
 3. **Verify** — ask Claude to run `aura__client_summary`. Counts back = connected.
 

@@ -5,6 +5,19 @@ All notable changes to the **aura-mcp** skill are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this kit tracks
 the `aura__*` control-plane tool surface shipped by the Aura fleet gateway.
 
+## [0.2.0] — 2026-07-21
+
+### Added
+
+- **Committed `.mcp.json`** (placeholders only) — the `aura` gateway connection reads its
+  management token from the `AURA_MCP_TOKEN` env var, so claude.ai cloud environments (which
+  load the repo's `.mcp.json` from the clone and inject env vars from the environment config)
+  and devices with the var in their shell connect with no per-machine setup. Unset var →
+  server skipped silently. `.mcp.json` left `.gitignore` (the tracked file must only ever
+  contain `${VAR}` placeholders); `.claude/settings.json` sets `enableAllProjectMcpServers`
+  so the committed config is auto-approved. `connect.md`, `README.md` document the env-var
+  route.
+
 ## [0.1.1] — 2026-07-10
 
 ### Fixed

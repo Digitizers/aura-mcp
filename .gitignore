@@ -1,5 +1,4 @@
-# Secrets — never commit a management token
-.mcp.json
+# Secrets — never commit a management token (.mcp.json is tracked and holds ${VAR} placeholders only)
 .env
 .env.*
 
