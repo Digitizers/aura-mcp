@@ -1,16 +1,16 @@
 ---
 name: aura-mcp
-version: 0.1.1
+version: 0.2.0
 license: MIT
 description: Drive your Aura agency control plane from Claude — approvals, snapshots, connections, runs — over the Aura MCP gateway. Teaches the `aura__*` control-plane tools (list_pending_approvals, get_action, list_snapshots, list_connections, list_runs, client_summary, reject_action, restore_snapshot, rollback_run, approve_action) and the connect flow: mint a `canManage` management token in Aura, point an MCP HTTP client at the fleet gateway, and read/govern the agency itself — not just the managed sites. This is a thin connector, not a standalone server: all auth, policy, approval-gating, and audit live in the Aura gateway (single enforcement point). Requires an Aura account (app.my-aura.app) — no standalone value without one. Use when the user references Aura, aura-mcp, the Aura control plane, `/aura-mcp`, or runs `aura__*` tools; covers minting a management token, wiring the MCP client config, and the governance/safety model (human-tap approvals by default, self-approval guard, client-wide-only reverts). SKIP for the outward site/builder/content/infra tools (those are the fleet gateway's other tool groups), and for non-Aura MCP work.
 permissions:
   network:
     - "The Aura fleet MCP gateway over HTTPS (default https://app.my-aura.app/api/mcp/fleet) — JSON-RPC tools/list + tools/call, authenticated by a Bearer aura_ management token. No other host is contacted."
   filesystem:
-    - "Writes an MCP client config (.mcp.json in the current working directory, or the client's config file) that embeds the aura_ management token; appends .mcp.json to .gitignore there."
+    - "May write an MCP client config (.mcp.json with a ${AURA_MCP_TOKEN:-} placeholder in the current working directory, or the client's config file). Cursor configs use ${env:AURA_MCP_TOKEN} interpolation; only clients without env interpolation (Claude Desktop) get the token inline — those config files must stay out of version control."
   env:
     - "AURA_MCP_URL (optional — override the gateway URL; defaults to https://app.my-aura.app/api/mcp/fleet)"
-    - "AURA_MANAGEMENT_TOKEN (optional — supply the aura_ management token instead of pasting it into the config)"
+    - "AURA_MCP_TOKEN (the aura_ management token — preferred over pasting it into any config file)"
 ---
 
 # Aura MCP — control-plane skill

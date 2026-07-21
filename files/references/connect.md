@@ -37,7 +37,19 @@ The gateway speaks MCP over HTTP at **`https://app.my-aura.app/api/mcp/fleet`**,
 with `Authorization: Bearer aura_…`. On a management token, `tools/list` includes the
 `aura__*` tools alongside the fleet's site/infra/content tools.
 
-### Claude Code — `.mcp.json` in your project root
+### Claude Code — env var (zero-config, devices and cloud sessions)
+
+This repo commits a placeholder-only `.mcp.json` whose `Authorization` header reads
+`Bearer ${AURA_MCP_TOKEN:-}`. Set that variable — in your shell profile on a device, or in the
+claude.ai cloud environment's environment variables for web/phone sessions — and the `aura`
+connection authenticates automatically. While the variable is unset the config still parses
+(the `:-` default), but the connection can't authenticate and shows as unavailable in `/mcp` —
+that's expected until you provide the token. Never put a real token in the tracked
+`.mcp.json`. Cloud environments with a restricted network policy must allow
+`app.my-aura.app`.
+
+In a project of your own, the equivalent explicit config is:
+
 ```json
 {
   "mcpServers": {
@@ -51,7 +63,9 @@ with `Authorization: Bearer aura_…`. On a management token, `tools/list` inclu
   }
 }
 ```
-Add `.mcp.json` to `.gitignore` — it embeds the token.
+If you inline a real token like this, keep that `.mcp.json` out of version control
+(gitignore it) — or better, keep the `${AURA_MCP_TOKEN:-}` placeholder and export the
+token in your environment.
 
 ### Claude Desktop — `claude_desktop_config.json`
 (`%APPDATA%\Claude\` on Windows, `~/Library/Application Support/Claude/` on macOS)
@@ -68,12 +82,16 @@ Add `.mcp.json` to `.gitignore` — it embeds the token.
 ```
 
 ### Cursor — `.cursor/mcp.json`
+
+Cursor interpolates environment variables in MCP config with `${env:VAR}` — use it so the
+token stays out of the file:
+
 ```json
 {
   "mcpServers": {
     "aura": {
       "url": "https://app.my-aura.app/api/mcp/fleet",
-      "headers": { "Authorization": "Bearer aura_YOUR_MANAGEMENT_TOKEN" }
+      "headers": { "Authorization": "Bearer ${env:AURA_MCP_TOKEN}" }
     }
   }
 }

@@ -5,6 +5,30 @@ All notable changes to the **aura-mcp** skill are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this kit tracks
 the `aura__*` control-plane tool surface shipped by the Aura fleet gateway.
 
+## [0.2.0] — 2026-07-21
+
+### Added
+
+- **Committed `.mcp.json`** (secrets as placeholders only) — the `aura` gateway connection
+  reads its management token from the `AURA_MCP_TOKEN` env var, so claude.ai cloud
+  environments (which load the repo's `.mcp.json` from the clone and inject env vars from the
+  environment config) and devices with the var in their shell connect with no per-machine
+  setup. The `${AURA_MCP_TOKEN:-}` default keeps the config parseable when the var is unset —
+  the connection then just shows as unavailable until the token is provided (an unset `${VAR}`
+  with no default would fail the whole config parse). `.mcp.json` left `.gitignore` (the
+  tracked file must never contain a real token); `.claude/settings.json` sets
+  `enableAllProjectMcpServers` so the committed config is auto-approved once the folder is
+  trusted — in untrusted checkouts Claude Code deliberately ignores the committed key
+  (settings not checked into the repo only, as of v2.1.196) and prompts once.
+- **Every onboarding path now teaches the env-var route** (Codex round-1 P1): QUICKSTART §2,
+  `connect.md`, `safety.md` token hygiene, and the SKILL frontmatter no longer direct users to
+  paste a token into `.mcp.json` + gitignore it — that flow is unsafe now that the file is
+  tracked. Inline-token configs remain only for clients without env interpolation
+  (Claude Desktop), with an explicit keep-out-of-version-control warning; Cursor uses
+  `${env:AURA_MCP_TOKEN}`.
+- **Token env var standardized as `AURA_MCP_TOKEN`** (was `AURA_MANAGEMENT_TOKEN` in the SKILL
+  frontmatter).
+
 ## [0.1.1] — 2026-07-10
 
 ### Fixed
