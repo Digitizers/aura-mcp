@@ -30,10 +30,11 @@ can run standalone or orchestrate across a whole client fleet from a single dash
 
 | Stage | Skill | Role |
 | --- | --- | --- |
-| 🎨 Build | [siteagent-elementor-studio](https://github.com/Digitizers/siteagent-elementor-studio) | Design & build sites inside Elementor |
+| 🎨 Build | [siteagent-elementor-studio](https://github.com/Digitizers/siteagent-elementor-studio) · [elementor-mcp](https://github.com/Digitizers/elementor-mcp) | Design & build sites inside Elementor — the recipes, and the MCP engine under them |
 | 🔎 Audit + Content | [wordpress-api-pro](https://github.com/Digitizers/wordpress-api-pro) | REST content ops, SEO & site audits |
 | 🖥 Host | [cloudways-mcp](https://github.com/Digitizers/cloudways-mcp) · [hostinger-mcp](https://github.com/Digitizers/hostinger-mcp) | Provision & operate the infrastructure |
-| 🛡 Govern | [**aura-mcp** ← you are here](https://github.com/Digitizers/aura-mcp) | Drive the agency control plane — approvals, snapshots, rollbacks — over MCP |
+| 🚀 Deliver | [bunny-mcp](https://github.com/Digitizers/bunny-mcp) | CDN, storage & edge delivery |
+| 🛡 Govern | [**aura-mcp** ← you are here](https://github.com/Digitizers/aura-mcp) | Drive the control plane — approvals, snapshots, rollbacks — over MCP |
 
 The others acquire and operate; **aura-mcp is the capstone** — it governs the whole fleet from
 your editor.
