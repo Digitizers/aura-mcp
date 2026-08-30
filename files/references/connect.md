@@ -128,6 +128,23 @@ almost certainly lacks `canManage` — re-mint with "allow manage" checked.
 | Write returns `ORG_OPT_IN_REQUIRED` | Machine-approve is off for the org — approve in the Aura UI, or an admin enables it. |
 | `aura__approve_action` not callable | Add it to the token's allowed-tools (explicit opt-in), and confirm org opt-in. |
 
+### The gateway is sessionless — two non-bugs
+
+Both of these look like the gateway is incomplete. Both are what the MCP spec asks for, and
+each has already sent someone down a wrong path ([#5](https://github.com/Digitizers/aura-mcp/issues/5),
+[Aura#454](https://github.com/Digitizers/Aura/issues/454)):
+
+- **`GET https://app.my-aura.app/api/mcp/fleet` returns `405`.** MCP 2025-06-18 Streamable
+  HTTP: *"405 Method Not Allowed — returned if the server does not offer an SSE stream at this
+  endpoint."* The gateway has nothing to push to you, so it offers no stream. If your client is
+  parked at `connecting…`, this is not the reason — check the `tools fetch` row above.
+- **`initialize` returns no `Mcp-Session-Id`.** The header is optional in the spec, and this
+  endpoint has no sessions to identify: your bearer token already carries the whole scope, and
+  the route is serverless, so there is nowhere a session would live. Don't send one back;
+  nothing expects it.
+
+The reasoning is recorded in [Aura#461](https://github.com/Digitizers/Aura/issues/461).
+
 ### Telling a substitution problem from a bad token
 
 If a 401 leaves you unsure whether the token is wrong or never reached the header, don't
