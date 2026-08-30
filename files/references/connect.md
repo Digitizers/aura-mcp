@@ -43,10 +43,17 @@ This repo commits a placeholder-only `.mcp.json` whose `Authorization` header re
 `Bearer ${AURA_MCP_TOKEN:-}`. Set that variable — in your shell profile on a device, or in the
 claude.ai cloud environment's environment variables for web/phone sessions — and the `aura`
 connection authenticates automatically. While the variable is unset the config still parses
-(the `:-` default), but the connection can't authenticate and shows as unavailable in `/mcp` —
-that's expected until you provide the token. Never put a real token in the tracked
+(the `:-` default) and the header goes out with an empty bearer, so the gateway answers
+**401** and the client reports `AUTH_HEADER_REJECTED` — it does *not* quietly show as
+unavailable. That is expected until you provide the token, and since Aura #454 the 401 body
+says which side is at fault ("no credential presented" vs "agent token rejected"), so an
+unset variable no longer reads as a bad token. Never put a real token in the tracked
 `.mcp.json`. Cloud environments with a restricted network policy must allow
 `app.my-aura.app`.
+
+To see what your client actually resolved the header to — the fastest way to tell a
+substitution problem from a credential one — run `claude mcp get plugin:aura-mcp:aura`
+(the value is redacted in the output; what you are checking is `Status`).
 
 In a project of your own, the equivalent explicit config is:
 
@@ -112,7 +119,43 @@ almost certainly lacks `canManage` — re-mint with "allow manage" checked.
 | Symptom | Cause / fix |
 |---|---|
 | No `aura__*` tools in `tools/list` | Token isn't `canManage`. Re-mint with "allow manage". |
-| `Unauthorized: invalid or expired agent token` | Bad/rotated token, or malformed header. Must be `Bearer aura_<48 hex>`. |
+| `Connected · tools fetch failed` / `Request timed out`, or the client sits at `connecting…` | **Not an auth problem — auth already passed.** `tools/list` asks every connected site for its tools, and a large or partly unreachable fleet used to outrun the request (Aura #454). Fixed gateway-side; if you still see it, the fleet has sites that answer very slowly. |
+| `Unauthorized: no credential presented` | The header arrived with an empty bearer — `AURA_MCP_TOKEN` is unset (or empty) in the environment that launched the client. Nothing wrong with your token. |
+| `Unauthorized: malformed credential` | The header is not `Bearer aura_<48 hex>` — an unexpanded `${AURA_MCP_TOKEN}` literal, a truncated paste, or a missing space after `Bearer`. A client-config problem, not a token one. |
+| `Unauthorized: agent token rejected` | *Now* it's the token: unknown, revoked, or expired. Re-mint in Aura → Fleet → Agent Tokens. |
+| `Unauthorized: invalid or expired agent token` | The pre-#454 message, which meant *any* of the three above. If you see it, the gateway predates the split — use the literal-token control below to tell them apart. |
 | Write returns `PACK_SCOPED_TOKEN` | Reverts need a client-wide token; this one is pack-scoped. |
 | Write returns `ORG_OPT_IN_REQUIRED` | Machine-approve is off for the org — approve in the Aura UI, or an admin enables it. |
 | `aura__approve_action` not callable | Add it to the token's allowed-tools (explicit opt-in), and confirm org opt-in. |
+
+### Telling a substitution problem from a bad token
+
+If a 401 leaves you unsure whether the token is wrong or never reached the header, don't
+re-mint first — re-minting is the expensive guess, and it was the wrong one in
+[aura-mcp#5](https://github.com/Digitizers/aura-mcp/issues/5).
+
+Two controls, in order of cost:
+
+1. **Ask the client what it resolved.** `claude mcp get plugin:aura-mcp:aura` prints the
+   server's status and headers (the credential is redacted). A `Status` of `Connected` means
+   the header was substituted and accepted — whatever else is failing is not auth.
+2. **Replay the token by hand.** This is the ground truth for the credential itself:
+
+   ```bash
+   curl -sS -X POST https://app.my-aura.app/api/mcp/fleet \
+     -H "Authorization: Bearer $AURA_MCP_TOKEN" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json, text/event-stream" \
+     -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"1"}}}'
+   ```
+
+   A 200 with `serverInfo` proves the token is good and the problem is on the client side of
+   the header. A 401 names which of the three failures it is.
+
+   Send `initialize` first. `tools/list` is answered on its own, but it fans out across the
+   whole fleet, so on a large fleet it is the slowest call to probe with — not a good first
+   test of a credential.
+
+A token pasted literally into a config as a comparison test is a legitimate control, but a
+`canManage` token in plaintext is not a resting state — remove it once it has told you what
+you needed.
