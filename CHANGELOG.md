@@ -14,8 +14,11 @@ the `aura__*` control-plane tool surface shipped by the Aura fleet gateway.
   environments (which load the repo's `.mcp.json` from the clone and inject env vars from the
   environment config) and devices with the var in their shell connect with no per-machine
   setup. The `${AURA_MCP_TOKEN:-}` default keeps the config parseable when the var is unset —
-  the connection then just shows as unavailable until the token is provided (an unset `${VAR}`
-  with no default would fail the whole config parse). `.mcp.json` left `.gitignore` (the
+  an unset `${VAR}` with no default would fail the whole config parse. *(Corrected after
+  release: this entry originally said the connection "just shows as unavailable" until the
+  token is provided. It does not — the empty bearer draws a 401 the client reports as
+  `AUTH_HEADER_REJECTED`, which reads as a bad token. See issue #5; the gateway's 401 now
+  names the missing credential.)* `.mcp.json` left `.gitignore` (the
   tracked file must never contain a real token); `.claude/settings.json` sets
   `enableAllProjectMcpServers` so the committed config is auto-approved once the folder is
   trusted — in untrusted checkouts Claude Code deliberately ignores the committed key

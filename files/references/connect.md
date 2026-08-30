@@ -116,10 +116,38 @@ almost certainly lacks `canManage` — re-mint with "allow manage" checked.
 
 ## Troubleshooting
 
+### Start here: read the status, then pick a row
+
+A client parked at `connecting…` tells you nothing by itself — the same screen covers "never
+reached the host", "rejected the credential" and "authenticated fine but discovery is slow",
+and those need opposite fixes. Get the status first:
+
+```bash
+claude mcp get plugin:aura-mcp:aura
+```
+
+**First question: did the server answer at all?** Everything else follows from that, and
+getting it backwards is what sends people to re-mint tokens or debug DNS for no reason.
+
+**A. The server answered** — any HTTP status came back, including an error one. The network,
+DNS and TLS are all working; do not touch them. Read the status:
+
+| Status | What it means | Go to |
+|---|---|---|
+| `Connected` (with or without `tools fetch failed`) | The credential was accepted. Anything still failing is discovery, not auth. | the `tools fetch failed` row |
+| `401`, or `AUTH_HEADER_REJECTED` | The gateway refused the header. | the `Unauthorized: …` rows, which name which of the three it is |
+| `404` | The URL is wrong — usually a self-hosted deployment with the wrong host or a path that isn't `/api/mcp/fleet`. | fix the URL |
+| `5xx` | The gateway failed, not you. | retry; if it persists, report it with the timestamp |
+
+**B. No answer came back** — a transport error, a hang with no status, nothing to read. Only
+now is connectivity the suspect: check the network can reach `app.my-aura.app` (a restricted
+cloud environment must allow-list it), then DNS, then TLS.
+
 | Symptom | Cause / fix |
 |---|---|
 | No `aura__*` tools in `tools/list` | Token isn't `canManage`. Re-mint with "allow manage". |
-| `Connected · tools fetch failed` / `Request timed out`, or the client sits at `connecting…` | **Not an auth problem — auth already passed.** `tools/list` asks every connected site for its tools, and a large or partly unreachable fleet used to outrun the request (Aura #454). Fixed gateway-side; if you still see it, the fleet has sites that answer very slowly. |
+| `Connected · tools fetch failed` (e.g. `Request timed out`) | **Auth already passed** — `Connected` is what says so. The failure is `tools/list`, which asks every connected site for its tools; a large or partly unreachable fleet used to outrun the request (Aura #454). Fixed gateway-side; if you still see it, the fleet has sites answering very slowly. |
+| Client sits at `connecting…` with no status detail | **Not yet diagnosable on its own** — read the status first, see *Start here* above. |
 | `Unauthorized: no credential presented` | The header arrived with an empty bearer — `AURA_MCP_TOKEN` is unset (or empty) in the environment that launched the client. Nothing wrong with your token. |
 | `Unauthorized: malformed credential` | The header is not `Bearer aura_<48 hex>` — an unexpanded `${AURA_MCP_TOKEN}` literal, a truncated paste, or a missing space after `Bearer`. A client-config problem, not a token one. |
 | `Unauthorized: agent token rejected` | *Now* it's the token: unknown, revoked, or expired. Re-mint in Aura → Fleet → Agent Tokens. |
@@ -127,6 +155,24 @@ almost certainly lacks `canManage` — re-mint with "allow manage" checked.
 | Write returns `PACK_SCOPED_TOKEN` | Reverts need a client-wide token; this one is pack-scoped. |
 | Write returns `ORG_OPT_IN_REQUIRED` | Machine-approve is off for the org — approve in the Aura UI, or an admin enables it. |
 | `aura__approve_action` not callable | Add it to the token's allowed-tools (explicit opt-in), and confirm org opt-in. |
+
+### The gateway is sessionless — two non-bugs
+
+Both of these look like the gateway is incomplete. Both are what the MCP spec asks for, and
+each has already sent someone down a wrong path ([#5](https://github.com/Digitizers/aura-mcp/issues/5),
+[Aura#454](https://github.com/Digitizers/Aura/issues/454)):
+
+- **`GET https://app.my-aura.app/api/mcp/fleet` returns `405`.** MCP 2025-06-18 Streamable
+  HTTP: *"405 Method Not Allowed — returned if the server does not offer an SSE stream at this
+  endpoint."* The gateway has nothing to push to you, so it offers no stream. If your client is
+  parked at `connecting…`, this is not the reason — work through *Start here* above, which
+  reads the status before assuming anything.
+- **`initialize` returns no `Mcp-Session-Id`.** The header is optional in the spec, and this
+  endpoint has no sessions to identify: your bearer token already carries the whole scope, and
+  the route is serverless, so there is nowhere a session would live. Don't send one back;
+  nothing expects it.
+
+The reasoning is recorded in [Aura#461](https://github.com/Digitizers/Aura/issues/461).
 
 ### Telling a substitution problem from a bad token
 
