@@ -119,7 +119,8 @@ almost certainly lacks `canManage` — re-mint with "allow manage" checked.
 | Symptom | Cause / fix |
 |---|---|
 | No `aura__*` tools in `tools/list` | Token isn't `canManage`. Re-mint with "allow manage". |
-| `Connected · tools fetch failed` / `Request timed out`, or the client sits at `connecting…` | **Not an auth problem — auth already passed.** `tools/list` asks every connected site for its tools, and a large or partly unreachable fleet used to outrun the request (Aura #454). Fixed gateway-side; if you still see it, the fleet has sites that answer very slowly. |
+| `Connected · tools fetch failed` (e.g. `Request timed out`) | **Auth already passed** — `Connected` is what says so. The failure is `tools/list`, which asks every connected site for its tools; a large or partly unreachable fleet used to outrun the request (Aura #454). Fixed gateway-side; if you still see it, the fleet has sites answering very slowly. |
+| Client sits at `connecting…` with no status detail | **Not yet diagnosable — find out whether it ever authenticated.** Run `claude mcp get plugin:aura-mcp:aura`. `Connected` → the row above. Anything else → the request never completed: check that the network can reach `app.my-aura.app` (a restricted cloud environment must allow-list it), then DNS/TLS, then the 401 rows below. |
 | `Unauthorized: no credential presented` | The header arrived with an empty bearer — `AURA_MCP_TOKEN` is unset (or empty) in the environment that launched the client. Nothing wrong with your token. |
 | `Unauthorized: malformed credential` | The header is not `Bearer aura_<48 hex>` — an unexpanded `${AURA_MCP_TOKEN}` literal, a truncated paste, or a missing space after `Bearer`. A client-config problem, not a token one. |
 | `Unauthorized: agent token rejected` | *Now* it's the token: unknown, revoked, or expired. Re-mint in Aura → Fleet → Agent Tokens. |
