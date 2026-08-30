@@ -138,7 +138,8 @@ each has already sent someone down a wrong path ([#5](https://github.com/Digitiz
 - **`GET https://app.my-aura.app/api/mcp/fleet` returns `405`.** MCP 2025-06-18 Streamable
   HTTP: *"405 Method Not Allowed — returned if the server does not offer an SSE stream at this
   endpoint."* The gateway has nothing to push to you, so it offers no stream. If your client is
-  parked at `connecting…`, this is not the reason — check the `tools fetch` row above.
+  parked at `connecting…`, this is not the reason — start at the `connecting…` row above, which
+  tells you whether it ever authenticated.
 - **`initialize` returns no `Mcp-Session-Id`.** The header is optional in the spec, and this
   endpoint has no sessions to identify: your bearer token already carries the whole scope, and
   the route is serverless, so there is nowhere a session would live. Don't send one back;
