@@ -116,11 +116,33 @@ almost certainly lacks `canManage` — re-mint with "allow manage" checked.
 
 ## Troubleshooting
 
+### Start here: read the status, then pick a row
+
+A client parked at `connecting…` tells you nothing by itself — the same screen covers "never
+reached the host", "rejected the credential" and "authenticated fine but discovery is slow",
+and those need opposite fixes. Get the status first:
+
+```bash
+claude mcp get plugin:aura-mcp:aura
+```
+
+Then take the **first** branch that matches — the order matters, because a completed request
+that was refused is not a connectivity problem:
+
+1. **`Connected`** (with or without `tools fetch failed`) → the credential was accepted. Any
+   remaining failure is discovery, not auth → the `tools fetch failed` row.
+2. **`AUTH_HEADER_REJECTED`, or any HTTP 401** → the request *completed* and the gateway
+   refused the header. Do not touch the network → the `Unauthorized: …` rows, which name
+   which of the three failures it is.
+3. **Anything else — no response, a transport error, no status at all** → the request never
+   completed. Check the network can reach `app.my-aura.app` (a restricted cloud environment
+   must allow-list it), then DNS, then TLS.
+
 | Symptom | Cause / fix |
 |---|---|
 | No `aura__*` tools in `tools/list` | Token isn't `canManage`. Re-mint with "allow manage". |
 | `Connected · tools fetch failed` (e.g. `Request timed out`) | **Auth already passed** — `Connected` is what says so. The failure is `tools/list`, which asks every connected site for its tools; a large or partly unreachable fleet used to outrun the request (Aura #454). Fixed gateway-side; if you still see it, the fleet has sites answering very slowly. |
-| Client sits at `connecting…` with no status detail | **Not yet diagnosable — find out whether it ever authenticated.** Run `claude mcp get plugin:aura-mcp:aura`. `Connected` → the row above. Anything else → the request never completed: check that the network can reach `app.my-aura.app` (a restricted cloud environment must allow-list it), then DNS/TLS, then the 401 rows below. |
+| Client sits at `connecting…` with no status detail | **Not yet diagnosable on its own** — read the status first, see *Start here* below. |
 | `Unauthorized: no credential presented` | The header arrived with an empty bearer — `AURA_MCP_TOKEN` is unset (or empty) in the environment that launched the client. Nothing wrong with your token. |
 | `Unauthorized: malformed credential` | The header is not `Bearer aura_<48 hex>` — an unexpanded `${AURA_MCP_TOKEN}` literal, a truncated paste, or a missing space after `Bearer`. A client-config problem, not a token one. |
 | `Unauthorized: agent token rejected` | *Now* it's the token: unknown, revoked, or expired. Re-mint in Aura → Fleet → Agent Tokens. |
@@ -138,8 +160,8 @@ each has already sent someone down a wrong path ([#5](https://github.com/Digitiz
 - **`GET https://app.my-aura.app/api/mcp/fleet` returns `405`.** MCP 2025-06-18 Streamable
   HTTP: *"405 Method Not Allowed — returned if the server does not offer an SSE stream at this
   endpoint."* The gateway has nothing to push to you, so it offers no stream. If your client is
-  parked at `connecting…`, this is not the reason — start at the `connecting…` row above, which
-  tells you whether it ever authenticated.
+  parked at `connecting…`, this is not the reason — work through *Start here* above, which
+  reads the status before assuming anything.
 - **`initialize` returns no `Mcp-Session-Id`.** The header is optional in the spec, and this
   endpoint has no sessions to identify: your bearer token already carries the whole scope, and
   the route is serverless, so there is nowhere a session would live. Don't send one back;
