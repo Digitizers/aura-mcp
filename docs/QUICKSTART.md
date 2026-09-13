@@ -32,6 +32,13 @@ the token isn't `canManage`; re-mint with "allow manage".
 ## 4. (Optional) enable the high-risk writes
 - **Reverts** (`aura__restore_snapshot`, `aura__rollback_run`): use a **client-wide** token
   (not pack-scoped) and add those tool names to the token's allowed-tools.
+- **File restores**: snapshots come in two kinds — page and file. Restoring a **file**
+  snapshot (deleting a file an agent created, or putting back what it overwrote) needs a
+  *second*, explicit capability beyond `aura__restore_snapshot`: add
+  `aura__restore_snapshot:file` to the token's allowed-tools too. Without it, page restores
+  are unaffected but a file id is refused, and any file leg of `aura__rollback_run` comes
+  back `not_attempted` instead of running — re-issue the token with that capability added to
+  fix it. See [safety.md](../files/references/safety.md) for why it's a separate grant.
 - **Machine-approve** (`aura__approve_action`): add it to allowed-tools **and** have an org
   admin enable machine-approve in Aura settings. Otherwise approvals stay human-tap in the UI
   (which is the safe default — the skill will surface + comment on pending actions instead).
@@ -40,4 +47,8 @@ the token isn't `canManage`; re-mint with "allow manage".
 - *"What's pending approval?"* → `aura__list_pending_approvals`
 - *"Give me a summary of this client"* → `aura__client_summary`
 - *"Reject action X, it's wrong"* → `aura__reject_action`
-- *"Roll back run Y"* → `aura__rollback_run` (client-wide token)
+- *"List snapshots for this site"* → `aura__list_snapshots` (page + file, each row typed)
+- *"Restore snapshot X"* → `aura__restore_snapshot` (client-wide token; a file snapshot also
+  needs `aura__restore_snapshot:file`)
+- *"Roll back run Y"* → `aura__rollback_run` (client-wide token; file legs need
+  `aura__restore_snapshot:file` too, or they're reported `not_attempted`)

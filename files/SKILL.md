@@ -2,7 +2,7 @@
 name: aura-mcp
 version: 0.2.0
 license: MIT
-description: Drive your Aura agency control plane from Claude — approvals, snapshots, connections, runs — over the Aura MCP gateway. Teaches the `aura__*` control-plane tools (list_pending_approvals, get_action, list_snapshots, list_connections, list_runs, client_summary, reject_action, restore_snapshot, rollback_run, approve_action) and the connect flow: mint a `canManage` management token in Aura, point an MCP HTTP client at the fleet gateway, and read/govern the agency itself — not just the managed sites. This is a thin connector, not a standalone server: all auth, policy, approval-gating, and audit live in the Aura gateway (single enforcement point). Requires an Aura account (app.my-aura.app) — no standalone value without one. Use when the user references Aura, aura-mcp, the Aura control plane, `/aura-mcp`, or runs `aura__*` tools; covers minting a management token, wiring the MCP client config, and the governance/safety model (human-tap approvals by default, self-approval guard, client-wide-only reverts). SKIP for the outward site/builder/content/infra tools (those are the fleet gateway's other tool groups), and for non-Aura MCP work.
+description: Drive your Aura agency control plane from Claude — approvals, snapshots, connections, runs — over the Aura MCP gateway. Teaches the `aura__*` control-plane tools (list_pending_approvals, get_action, list_snapshots — page AND file snapshots, each row typed `page`/`file` — list_connections, list_runs, client_summary, reject_action, restore_snapshot — a page or a file, the latter gated by a second, explicit `aura__restore_snapshot:file` capability a plain page-restore grant does not include — rollback_run — its file legs need that same capability or are reported `not_attempted`, never silently skipped — approve_action) and the connect flow: mint a `canManage` management token in Aura, point an MCP HTTP client at the fleet gateway, and read/govern the agency itself — not just the managed sites. This is a thin connector, not a standalone server: all auth, policy, approval-gating, and audit live in the Aura gateway (single enforcement point). Requires an Aura account (app.my-aura.app) — no standalone value without one. Use when the user references Aura, aura-mcp, the Aura control plane, `/aura-mcp`, or runs `aura__*` tools; covers minting a management token, wiring the MCP client config, and the governance/safety model (human-tap approvals by default, self-approval guard, client-wide-only reverts, the file-restore capability as a separate consent boundary). SKIP for the outward site/builder/content/infra tools (those are the fleet gateway's other tool groups), and for non-Aura MCP work.
 permissions:
   network:
     - "The Aura fleet MCP gateway over HTTPS (default https://app.my-aura.app/api/mcp/fleet) — JSON-RPC tools/list + tools/call, authenticated by a Bearer aura_ management token. No other host is contacted."
@@ -45,15 +45,15 @@ What would you like to do with your Aura agency?
   READ (safe, always available on a management token)
   1. Show pending approvals            → aura__list_pending_approvals
   2. Inspect one action                → aura__get_action
-  3. List snapshots (rollback points)  → aura__list_snapshots
+  3. List snapshots (rollback points)  → aura__list_snapshots       (page + file, typed)
   4. List provider connections         → aura__list_connections
   5. List recent agent runs            → aura__list_runs
   6. Client situational summary        → aura__client_summary
 
   WRITE (governed — see safety notes)
   7. Reject a pending action           → aura__reject_action        (safe: only denies)
-  8. Restore a page snapshot           → aura__restore_snapshot     (revert; client-wide token)
-  9. Roll back a whole run             → aura__rollback_run         (revert; client-wide token)
+  8. Restore a page or file snapshot   → aura__restore_snapshot     (revert; client-wide token; file id needs aura__restore_snapshot:file too)
+  9. Roll back a whole run             → aura__rollback_run         (revert; client-wide token; file legs need aura__restore_snapshot:file or are not_attempted)
  10. Approve + run a pending action    → aura__approve_action       (most privileged; opt-in)
 ```
 
@@ -67,13 +67,13 @@ Quick map (R = read, W = write, W! = high-risk revert/execute):
 |---|---|---|
 | `aura__list_pending_approvals` | R | Agent actions awaiting human approval in scope |
 | `aura__get_action` | R | One action's full status / params / result |
-| `aura__list_snapshots` | R | Page snapshots (rollback points), filterable by resource/post |
+| `aura__list_snapshots` | R | Page **and file** snapshots (rollback points), each typed `type: "page" \| "file"`; `postId` filters to page rows only |
 | `aura__list_connections` | R | Provider connections + validation status (never credentials) |
 | `aura__list_runs` | R | Recent runs (actions grouped by `runId`) |
-| `aura__client_summary` | R | One-shot counts: resources, connections, pending, snapshots |
+| `aura__client_summary` | R | One-shot counts: resources, connections, pending, snapshots (page + file together) |
 | `aura__reject_action` | W | Deny a pending action so it never runs (safe — only denies) |
-| `aura__restore_snapshot` | W! | Roll a page back to a snapshot (client-wide token only) |
-| `aura__rollback_run` | W! | Unwind a whole run, newest snapshot first (client-wide token only) |
+| `aura__restore_snapshot` | W! | Roll a page **or file** back to a snapshot (client-wide token only; a file id also needs `aura__restore_snapshot:file`) |
+| `aura__rollback_run` | W! | Unwind a whole run, newest snapshot first, page and file legs alike (client-wide token only; a file leg without `aura__restore_snapshot:file` is reported `not_attempted` — the rest of the run still runs) |
 | `aura__approve_action` | W! | Approve **and run** a pending action (opt-in + self-approval guard) |
 
 ## Governance & safety (read before any write)
@@ -92,6 +92,16 @@ Full model: **[references/safety.md](references/safety.md)**. The load-bearing r
 - **Explicit opt-in for the dangerous three.** `restore_snapshot`, `rollback_run`, and
   `approve_action` are NOT granted by the "empty `allowedTools` = unrestricted" default —
   the token must name them. Reads and `reject_action` (which can only deny) ride the default.
+- **A file restore is a second, bigger consent.** Restoring a *file* snapshot deletes a file
+  the agent created, or overwrites its current content with what was there before — a bigger
+  act than reverting a page, so it is never covered by a plain `aura__restore_snapshot` grant.
+  The token's `allowedTools` must separately name `aura__restore_snapshot:file`. Without it, a
+  page restore is unaffected but a file id is refused with `FILE_RESTORE_CAPABILITY_REQUIRED`
+  (only when the id genuinely resolves to a file snapshot in scope — an unmatched id is
+  `NOT_FOUND` instead), and any file leg of `aura__rollback_run` comes back `not_attempted` /
+  `FILE_CAPABILITY_REQUIRED` (a distinct string — don't conflate the two)
+  instead of running — the rest of the run still executes. Fix it by re-issuing the token with
+  `aura__restore_snapshot:file` added to `allowedTools`.
 - **Every `aura__*` call is audited** (`AgentUsageEvent`); machine-approvals are flagged
   distinctly as approved-via-MCP. Assume the trail sees everything you do.
 

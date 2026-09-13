@@ -92,13 +92,13 @@ Full steps (Claude Code / Desktop / Cursor, scoping, high-risk-write opt-in):
 |---|---|---|
 | `aura__list_pending_approvals` | read | Agent actions awaiting human approval |
 | `aura__get_action` | read | One action's full status / params / result |
-| `aura__list_snapshots` | read | Page snapshots (rollback points) |
+| `aura__list_snapshots` | read | Page **and file** snapshots (rollback points) — each row carries `type: "page" \| "file"` |
 | `aura__list_connections` | read | Provider connections + validation status (never credentials) |
 | `aura__list_runs` | read | Recent runs (actions grouped by `runId`) |
-| `aura__client_summary` | read | One-shot counts: resources, connections, pending, snapshots |
+| `aura__client_summary` | read | One-shot counts: resources, connections, pending, snapshots (page + file) |
 | `aura__reject_action` | write | Deny a pending action (safe — only denies) |
-| `aura__restore_snapshot` | write! | Roll a page back to a snapshot (client-wide token) |
-| `aura__rollback_run` | write! | Unwind a whole run (client-wide token) |
+| `aura__restore_snapshot` | write! | Roll a page or file back to a snapshot (client-wide token; a **file** id also needs `aura__restore_snapshot:file`) |
+| `aura__rollback_run` | write! | Unwind a whole run, page and file legs included (client-wide token; file legs need `aura__restore_snapshot:file` or they're reported `not_attempted`) |
 | `aura__approve_action` | write! | Approve **and run** a pending action (opt-in + guards) |
 
 Schemas + examples: [`files/references/tools.md`](files/references/tools.md).
@@ -108,8 +108,13 @@ Schemas + examples: [`files/references/tools.md`](files/references/tools.md).
 Approvals stay **human-tap by default**. `aura__approve_action` executes a queued write and
 ships behind three gates — `canManage`, explicit allow-listing, and an org opt-in — plus a
 server-side **self-approval guard** (a token can't approve an action it requested). Reverts
-(`restore_snapshot` / `rollback_run`) require a **client-wide** token. Every `aura__*` call is
-audited. Full model: [`files/references/safety.md`](files/references/safety.md).
+(`restore_snapshot` / `rollback_run`) require a **client-wide** token. Restoring a **file**
+snapshot — deleting a file an agent created, or putting back content it overwrote — needs a
+*second*, explicit capability beyond `aura__restore_snapshot`: `aura__restore_snapshot:file`.
+A token granted only the page capability gets refused on a file id with
+`FILE_RESTORE_CAPABILITY_REQUIRED` (only when the id genuinely resolves to a file snapshot in
+scope — an unmatched id is `NOT_FOUND` instead) — re-issue the token with it added. Every `aura__*` call is audited.
+Full model: [`files/references/safety.md`](files/references/safety.md).
 
 ## Why a connector, not a server
 
