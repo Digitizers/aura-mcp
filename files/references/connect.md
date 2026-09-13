@@ -16,7 +16,16 @@ explicit confirmation.
    `aura__rollback_run`) require a **client-wide** token and will refuse a pack-scoped one.
 5. **For the high-risk writes**, add their names to the token's **allowed tools** — they are
    NOT granted by default:
-   - `aura__restore_snapshot`
+   - `aura__restore_snapshot` (restores a **page** snapshot; a **file** snapshot needs the
+     next capability too — see below)
+   - `aura__restore_snapshot:file` — a **second, explicit** capability required to restore a
+     **file** snapshot (delete a file the agent created, or put back the content it
+     overwrote). It is not implied by `aura__restore_snapshot`: a token granted the page
+     capability before file restores existed consented to reverting a page, not to deleting
+     site files, so the grant is never widened silently. Without it, a page restore still
+     works, but a file id is refused (naming the missing capability), and any file leg of
+     `aura__rollback_run` comes back `not_attempted` instead of running. See
+     [safety.md](safety.md) for the full reasoning.
    - `aura__rollback_run`
    - `aura__approve_action` (also needs org opt-in — see [safety.md](safety.md))
 
@@ -153,6 +162,8 @@ cloud environment must allow-list it), then DNS, then TLS.
 | `Unauthorized: agent token rejected` | *Now* it's the token: unknown, revoked, or expired. Re-mint in Aura → Fleet → Agent Tokens. |
 | `Unauthorized: invalid or expired agent token` | The pre-#454 message, which meant *any* of the three above. If you see it, the gateway predates the split — use the literal-token control below to tell them apart. |
 | Write returns `PACK_SCOPED_TOKEN` | Reverts need a client-wide token; this one is pack-scoped. |
+| `aura__restore_snapshot` refuses a file id / names a missing capability | The token has `aura__restore_snapshot` but not `aura__restore_snapshot:file` — page restores still work. Re-issue the token with `aura__restore_snapshot:file` added to `allowedTools`. |
+| `aura__rollback_run` reports a file leg `not_attempted` / `FILE_CAPABILITY_REQUIRED` | Same fix — the run's other legs still ran; re-issue the token with `aura__restore_snapshot:file` and re-run to pick up the file leg. |
 | Write returns `ORG_OPT_IN_REQUIRED` | Machine-approve is off for the org — approve in the Aura UI, or an admin enables it. |
 | `aura__approve_action` not callable | Add it to the token's allowed-tools (explicit opt-in), and confirm org opt-in. |
 

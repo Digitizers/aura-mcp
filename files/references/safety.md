@@ -33,6 +33,34 @@ resources. A pack-scoped token can't safely bound that to a pack subset, so the 
 **refuses** a pack-scoped token (`PACK_SCOPED_TOKEN`) rather than partially reverting. Use a
 client-wide management token for reverts. Both also require explicit allow-listing.
 
+## File restores are a separate, bigger consent
+
+`aura__restore_snapshot` and `aura__rollback_run` cover two kinds of rollback point:
+**page** snapshots (roll a page's content back) and **file** snapshots (delete a file the
+agent created, or put back the content it overwrote). Both tables use cuid-shaped ids, so
+`restore_snapshot` looks a given id up in the page table first, then the file table — but a
+token that can restore pages cannot restore files just because it holds
+`aura__restore_snapshot`.
+
+Deleting or overwriting a file on the site is a bigger act than reverting a page's content, so
+it needs its own, explicit opt-in: `aura__restore_snapshot:file` named in the token's
+`allowedTools`, alongside `aura__restore_snapshot`. An existing token that was granted
+`aura__restore_snapshot` before file restores existed consented to rolling back a *page* — the
+grant is never widened silently to include deleting files.
+
+Without that capability:
+
+- `aura__restore_snapshot` on a **page** id is unaffected — it works exactly as before.
+- `aura__restore_snapshot` on a **file** id is refused; the response names the missing
+  capability.
+- `aura__rollback_run` still executes its resource and page legs. Each **file** leg is
+  reported `not_attempted` with reason `FILE_CAPABILITY_REQUIRED` — never silently skipped,
+  and never a whole-run refusal.
+
+**Fix:** re-issue the token with `aura__restore_snapshot:file` added to `allowedTools`. It is
+gated exactly like the other high-risk writes — client-wide token, explicit allow-listing —
+nothing about the ordinary revert rules above changes for it.
+
 ## What's safe by default
 
 - **All reads** (`list_*`, `get_action`, `client_summary`) — zero mutation risk.
