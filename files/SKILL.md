@@ -96,8 +96,10 @@ Full model: **[references/safety.md](references/safety.md)**. The load-bearing r
   the agent created, or overwrites its current content with what was there before — a bigger
   act than reverting a page, so it is never covered by a plain `aura__restore_snapshot` grant.
   The token's `allowedTools` must separately name `aura__restore_snapshot:file`. Without it, a
-  page restore is unaffected but a file id is refused (naming the missing capability), and any
-  file leg of `aura__rollback_run` comes back `not_attempted` / `FILE_CAPABILITY_REQUIRED`
+  page restore is unaffected but a file id is refused with `FILE_RESTORE_CAPABILITY_REQUIRED`
+  (only when the id genuinely resolves to a file snapshot in scope — an unmatched id is
+  `NOT_FOUND` instead), and any file leg of `aura__rollback_run` comes back `not_attempted` /
+  `FILE_CAPABILITY_REQUIRED` (a distinct string — don't conflate the two)
   instead of running — the rest of the run still executes. Fix it by re-issuing the token with
   `aura__restore_snapshot:file` added to `allowedTools`.
 - **Every `aura__*` call is audited** (`AgentUsageEvent`); machine-approvals are flagged

@@ -25,9 +25,16 @@ One action's full detail — status, params, result, approval/rejection metadata
 - An out-of-scope / out-of-pack id resolves to `null` (returned as an error), never a leak.
 
 ### `aura__list_snapshots`
-Page snapshots captured before governed writes — the rollback points.
+Page **and file** snapshots captured before governed writes — the rollback points, merged
+newest-first by `createdAt` and capped once at `limit` (not `limit` per table).
 - **Args:** `resourceId?` (string), `postId?` (int), `limit?` (int)
-- **Returns:** `{ snapshots: [{ id, resourceId, postId, tool, agentActionId, runId, restoredAt, createdAt }] }`
+- **Returns:** `{ snapshots: [Page | File] }` where:
+
+  - a **page** row is `{ type: "page", id, resourceId, postId, tool, agentActionId, runId, restoredAt, createdAt }`
+  - a **file** row is `{ type: "file", id, resourceId, agentActionId, runId, op, path, fenced, restoredAt, createdAt }`
+    — no `postId` and no `tool`; `op` is the write that was captured, `path` is the file's
+    path, `fenced` says whether Aura holds a rollback record the site can act on
+- Supplying `postId` returns **page rows only**.
 - A pack-scoped token passing a `resourceId` outside its pack matches nothing (the request
   can't widen the pack).
 
@@ -48,6 +55,7 @@ Ordered by last activity (an approved/started/finished action bumps a run up).
 One-shot situational snapshot of the token's client scope.
 - **Args:** none
 - **Returns:** `{ summary: { resourceCount, connectionCount, pendingApprovals, snapshotCount } }`
+- `snapshotCount` counts page and file rollback points together.
 
 ---
 
@@ -61,21 +69,42 @@ execute one, so it rides the default allowlist (no explicit opt-in needed).
   (e.g. the action was already decided).
 
 ### `aura__restore_snapshot` — high-risk revert
-Roll a page back to a captured snapshot (undo a design write). Idempotent — an
-already-restored snapshot is a no-op. Recorded as a self-approved action for the audit trail.
-- **Requires:** a **client-wide** management token (a pack-scoped token is refused) **and**
-  `aura__restore_snapshot` named in the token's `allowedTools`.
+Roll a **page or file** back to a captured snapshot (undo a design write, or a file an agent
+created/overwrote). Idempotent — an already-restored snapshot is a no-op. Recorded as a
+self-approved action for the audit trail.
+- **Requires:** a **client-wide** management token (a pack-scoped token is refused), **and**
+  `aura__restore_snapshot` named in the token's `allowedTools`. Restoring a **file** id also
+  requires the separate `aura__restore_snapshot:file` capability in `allowedTools` — a plain
+  `aura__restore_snapshot` grant does not include it.
 - **Args:** `snapshotId` (string, **required**)
-- **Returns:** `{ ok, code, actionId, postId }`
+- **Returns (page):** `{ ok, code, actionId, postId }`
+- **Returns (file):** `{ ok, code, actionId }` — no `postId`
+- `actionId` is present only when **this call** actually settled the restore. If another claim
+  took the row over mid-flight, the call still answers `ok`, but without an `actionId` — the
+  action it created is no longer the one that owns the outcome.
+- **Missing the file capability:** `{ ok: false, code: "FILE_RESTORE_CAPABILITY_REQUIRED" }` —
+  and only when `snapshotId` genuinely resolves to a **file** snapshot in the token's own
+  scope. An id matching neither table still answers the file table's `NOT_FOUND` — a
+  capability refusal for something that doesn't exist would be inaccurate, not merely vague.
+  This code never doubles as "unknown id."
 
 ### `aura__rollback_run` — high-risk revert
-Roll back a whole run — replays every snapshot the run produced (infra + page) newest-first.
-A partial failure never aborts the rest; **any** failed leg makes the call an error.
+Roll back a whole run — replays every snapshot the run produced (infra + page + file)
+newest-first. A partial failure never aborts the rest.
 - **Requires:** a **client-wide** token (a run can span resources outside a pack) **and**
-  `aura__rollback_run` in `allowedTools`.
+  `aura__rollback_run` in `allowedTools`. A **file** leg additionally needs
+  `aura__restore_snapshot:file` — without it, that leg is reported `not_attempted` rather than
+  run, while the rest of the run still executes.
 - **Args:** `runId` (string, **required**)
 - **Returns:** `{ ok, restored, failed, results: [{ ...perSnapshot, status }] }` (`ok` is
   false if any snapshot failed).
+- `results[].status` is one of **`restored`**, **`failed`**, or **`not_attempted`**:
+  - `failed` — the site was asked and refused.
+  - `not_attempted` — nothing was sent. A file leg the token isn't entitled to restore is
+    reported this way, with a reason string beginning `FILE_CAPABILITY_REQUIRED` (note: a
+    different string from `aura__restore_snapshot`'s `FILE_RESTORE_CAPABILITY_REQUIRED` code
+    above — the two are not the same value, don't conflate them). `not_attempted` also covers
+    legs the run couldn't start before its request budget ran out.
 
 ### `aura__approve_action` — most privileged (approve AND run)
 Approve a pending action and **execute** the queued write. The tool + params come from the
@@ -100,4 +129,5 @@ recorded action — you only allow what was already requested.
 | `ORG_OPT_IN_REQUIRED` | Machine-approve isn't enabled for the org — approve in the Aura UI. |
 | `ACTOR_REQUIRED` | The management token has no known owner; re-mint under an active user. |
 | `PACK_SCOPED_TOKEN` | A revert (restore/rollback) needs a client-wide token, not a pack one. |
+| `FILE_RESTORE_CAPABILITY_REQUIRED` | `aura__restore_snapshot` on a **file** id, from a token that lacks `aura__restore_snapshot:file`. Fires only when the id genuinely resolves to a file snapshot in scope — an id matching neither table is `NOT_FOUND` instead, never this code. |
 | (self-approval refusal) | The token requested the action it's trying to approve. |

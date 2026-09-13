@@ -162,8 +162,8 @@ cloud environment must allow-list it), then DNS, then TLS.
 | `Unauthorized: agent token rejected` | *Now* it's the token: unknown, revoked, or expired. Re-mint in Aura → Fleet → Agent Tokens. |
 | `Unauthorized: invalid or expired agent token` | The pre-#454 message, which meant *any* of the three above. If you see it, the gateway predates the split — use the literal-token control below to tell them apart. |
 | Write returns `PACK_SCOPED_TOKEN` | Reverts need a client-wide token; this one is pack-scoped. |
-| `aura__restore_snapshot` refuses a file id / names a missing capability | The token has `aura__restore_snapshot` but not `aura__restore_snapshot:file` — page restores still work. Re-issue the token with `aura__restore_snapshot:file` added to `allowedTools`. |
-| `aura__rollback_run` reports a file leg `not_attempted` / `FILE_CAPABILITY_REQUIRED` | Same fix — the run's other legs still ran; re-issue the token with `aura__restore_snapshot:file` and re-run to pick up the file leg. |
+| `aura__restore_snapshot` refuses a file id with `FILE_RESTORE_CAPABILITY_REQUIRED` | The token has `aura__restore_snapshot` but not `aura__restore_snapshot:file` — page restores still work. Re-issue the token with `aura__restore_snapshot:file` added to `allowedTools`. (An id matching neither the page nor file table is `NOT_FOUND` instead — that's an unknown id, not this.) |
+| `aura__rollback_run` reports a file leg `not_attempted` with a `FILE_CAPABILITY_REQUIRED` reason | Same fix — the run's other legs still ran; re-issue the token with `aura__restore_snapshot:file` and re-run to pick up the file leg. (A different string from `FILE_RESTORE_CAPABILITY_REQUIRED` above — don't conflate the two.) |
 | Write returns `ORG_OPT_IN_REQUIRED` | Machine-approve is off for the org — approve in the Aura UI, or an admin enables it. |
 | `aura__approve_action` not callable | Add it to the token's allowed-tools (explicit opt-in), and confirm org opt-in. |
 

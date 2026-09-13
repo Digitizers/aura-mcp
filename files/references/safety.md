@@ -51,8 +51,9 @@ grant is never widened silently to include deleting files.
 Without that capability:
 
 - `aura__restore_snapshot` on a **page** id is unaffected — it works exactly as before.
-- `aura__restore_snapshot` on a **file** id is refused; the response names the missing
-  capability.
+- `aura__restore_snapshot` on a **file** id is refused: `{ ok: false, code:
+  "FILE_RESTORE_CAPABILITY_REQUIRED" }` — but only when the id genuinely resolves to a file
+  snapshot in the token's scope; an id matching neither table still answers `NOT_FOUND`.
 - `aura__rollback_run` still executes its resource and page legs. Each **file** leg is
   reported `not_attempted` with reason `FILE_CAPABILITY_REQUIRED` — never silently skipped,
   and never a whole-run refusal.

@@ -111,8 +111,9 @@ server-side **self-approval guard** (a token can't approve an action it requeste
 (`restore_snapshot` / `rollback_run`) require a **client-wide** token. Restoring a **file**
 snapshot — deleting a file an agent created, or putting back content it overwrote — needs a
 *second*, explicit capability beyond `aura__restore_snapshot`: `aura__restore_snapshot:file`.
-A token granted only the page capability gets refused on a file id (the message names the
-missing capability) — re-issue the token with it added. Every `aura__*` call is audited.
+A token granted only the page capability gets refused on a file id with
+`FILE_RESTORE_CAPABILITY_REQUIRED` (only when the id genuinely resolves to a file snapshot in
+scope — an unmatched id is `NOT_FOUND` instead) — re-issue the token with it added. Every `aura__*` call is audited.
 Full model: [`files/references/safety.md`](files/references/safety.md).
 
 ## Why a connector, not a server
