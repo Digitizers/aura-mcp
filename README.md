@@ -97,6 +97,7 @@ Full steps (Claude Code / Desktop / Cursor, scoping, high-risk-write opt-in):
 | `aura__list_runs` | read | Recent runs (actions grouped by `runId`) |
 | `aura__client_summary` | read | One-shot counts: resources, connections, pending, snapshots (page + file) |
 | `aura__reject_action` | write | Deny a pending action (safe — only denies) |
+| `aura__reject_run` | write | Deny every still-pending action of one run (safe — only denies) |
 | `aura__restore_snapshot` | write! | Roll a page or file back to a snapshot (client-wide token; a **file** id also needs `aura__restore_snapshot:file`) |
 | `aura__rollback_run` | write! | Unwind a whole run, page and file legs included (client-wide token; file legs need `aura__restore_snapshot:file` or they're reported `not_attempted`) |
 | `aura__approve_action` | write! | Approve **and run** a pending action (opt-in + guards) |

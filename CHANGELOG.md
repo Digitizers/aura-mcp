@@ -5,6 +5,18 @@ All notable changes to the **aura-mcp** skill are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this kit tracks
 the `aura__*` control-plane tool surface shipped by the Aura fleet gateway.
 
+## [Unreleased]
+
+### Added
+
+- **`aura__reject_run`** — documented across `SKILL.md`, `README.md`, `references/tools.md` and
+  `references/safety.md`. Shipped by the gateway in `Digitizers/Aura#669`: rejects every
+  still-pending action of one run in a single call, and reports what it could not reject and
+  whether the run was sealed.
+- **`safety.md`: a fleet call reaches every site in the token's scope.** What queues and what
+  runs at once, and how to clear a fan-out queued by mistake. Written after one session queued
+  76 approvals with two read-shaped calls (`Digitizers/Aura#667`).
+
 ## [0.2.0] — 2026-07-21
 
 ### Added

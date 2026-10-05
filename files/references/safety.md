@@ -65,8 +65,8 @@ nothing about the ordinary revert rules above changes for it.
 ## What's safe by default
 
 - **All reads** (`list_*`, `get_action`, `client_summary`) — zero mutation risk.
-- **`aura__reject_action`** — can only **deny** a queued action, never execute one. It rides
-  the default allowlist.
+- **`aura__reject_action`** and **`aura__reject_run`** — can only **deny** queued actions,
+  never execute one. They ride the default allowlist.
 
 ## Scope is always enforced
 
@@ -83,3 +83,17 @@ never returned by any tool.
   never commit it. Tracked config files carry only `${AURA_MCP_TOKEN:-}` placeholders, and
   Cursor configs interpolate the env var (`${env:AURA_MCP_TOKEN}`); the one client that must
   embed the token inline (Claude Desktop) keeps its config out of version control.
+
+## A fleet call reaches every site in the token's scope
+
+A site tool called through the gateway runs on **every** connected site the token can see —
+there is no per-call site selection yet. A read runs at once on all of them. Anything the
+gateway does not recognise as a read **queues one approval per site**, and "read" is decided by
+the tool's name: `run_wp_cli` queues whatever the command, and a builder tool whose name does
+not start with a read verb (`get-`, `list-`, …) queues unless Aura declares it a read.
+
+So before calling a tool whose effect you have not seen: assume it will queue on the whole
+fleet. If a call queued by mistake, its result carries a `runId` — clear it with
+`aura__reject_run`. Tools seen to run at once (2026-10-05): `check_health`, `get_site_context`,
+`elementor__elementor-mcp-server-info`. `elementor__elementor-mcp-detect-elementor-version` is
+declared a read since `Digitizers/Aura#669`; before that it queued.
