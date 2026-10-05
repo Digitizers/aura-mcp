@@ -81,7 +81,8 @@ can only **deny**, so it rides the default allowlist.
     deadline. When either says work is left, **call again**.
   - `seal` — `"sealed"`: the run had finished being created before this call looked, so what
     it reports is the whole run. `"unsealed"`: the run may still be being created, so more of
-    its actions can appear afterwards — check `aura__list_pending_approvals` and call again.
+    its actions can appear afterwards — call `aura__reject_run` again (the pending list is
+    capped and has no `runId` filter, so it cannot prove a run is cleared).
     `"unknown"`: no action with this run id in the token's scope (wrong id, a run outside the
     token's pack, or a run that has not inserted its first action yet). `sealed` is the boolean.
 - **Nothing pending** is an error (`code: "NOTHING_PENDING"`), and it still carries `seal` —

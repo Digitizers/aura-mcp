@@ -100,10 +100,12 @@ fleet. If a call queued by mistake, its result carries a `runId` — clear it wi
 actions and stops before the gateway's deadline; and a run that was still being created when
 you called can gain actions afterwards. Repeat until the answer has `remaining: 0`,
 `more: false`, an empty `notRejected` (or only entries you have looked at) **and**
-`seal: "sealed"`. On `seal: "unsealed"`, check `aura__list_pending_approvals` and call again;
+`seal: "sealed"`. On `seal: "unsealed"`, call `aura__reject_run` again;
 "nothing pending" on an unsealed run is not the end of it. A run whose creation was cut off is
-never sealed: once the call that created it has returned and `aura__list_pending_approvals`
-shows none of its actions, it is cleared.
+never sealed: once the call that created it has returned, call `aura__reject_run` for that
+`runId` one more time, and take its own `NOTHING_PENDING` as the end. Do not use the pending
+list as the proof — it is capped at 200 rows and has no `runId` filter, so a run's actions can
+be waiting outside the page it returned.
 
 Tools seen to run at once (2026-10-05): `check_health`, `get_site_context`,
 `elementor__elementor-mcp-server-info`. `elementor__elementor-mcp-detect-elementor-version` is

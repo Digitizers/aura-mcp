@@ -46,7 +46,7 @@ aura-mcp/
 ├── files/
 │   ├── SKILL.md                 ← The cheat sheet Claude reads
 │   └── references/
-│       ├── tools.md             ← All 10 aura__* tools: schemas, args, returns
+│       ├── tools.md             ← All 11 aura__* tools: schemas, args, returns
 │       ├── connect.md           ← Mint a management token + wire the MCP client
 │       └── safety.md            ← Governance model: approvals, self-approval guard, reverts
 ├── docs/
