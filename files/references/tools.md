@@ -68,6 +68,28 @@ execute one, so it rides the default allowlist (no explicit opt-in needed).
 - **Returns:** `{ rejected: true, actionId, status }` — or `{ rejected: false, code }` on error
   (e.g. the action was already decided).
 
+### `aura__reject_run` — safe write
+Reject **every action of one run that is still awaiting approval**, in one call. A fleet call
+that queues does so on every site in scope under one `runId`; this is how a fan-out queued by
+mistake is cleared without one `aura__reject_action` per site. Like `aura__reject_action` it
+can only **deny**, so it rides the default allowlist.
+- **Args:** `runId` (string, **required**), `reason?` (string, ≤500 chars, recorded on each action)
+- **Returns:** `{ runId, rejected, notRejected: [{ actionId, code?, status?, message }], remaining, more, sealed, seal }`
+  - `notRejected` — actions somebody decided in the meantime (`INVALID_STATE`), or an
+    Elementor-door hold the site had already claimed. They are reported, never overridden.
+  - `remaining` / `more` — at most 200 per call, and the call stops before the gateway's
+    deadline. When either says work is left, **call again**.
+  - `seal` — `"sealed"`: the run had finished being created before this call looked, so what
+    it reports is the whole run. `"unsealed"`: the run may still be being created, so more of
+    its actions can appear afterwards — call `aura__reject_run` again (the pending list is
+    capped and has no `runId` filter, so it cannot prove a run is cleared).
+    `"unknown"`: no action with this run id in the token's scope (wrong id, a run outside the
+    token's pack, or a run that has not inserted its first action yet). `sealed` is the boolean.
+- **Nothing pending** is an error (`code: "NOTHING_PENDING"`), and it still carries `seal` —
+  on an unsealed run "nothing pending" is not the end of the run.
+- **Where a `runId` comes from:** every fleet `tools/call` result, and each row of
+  `aura__list_pending_approvals` and `aura__list_runs`.
+
 ### `aura__restore_snapshot` — high-risk revert
 Roll a **page or file** back to a captured snapshot (undo a design write, or a file an agent
 created/overwrote). Idempotent — an already-restored snapshot is a no-op. Recorded as a

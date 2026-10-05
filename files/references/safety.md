@@ -65,8 +65,10 @@ nothing about the ordinary revert rules above changes for it.
 ## What's safe by default
 
 - **All reads** (`list_*`, `get_action`, `client_summary`) — zero mutation risk.
-- **`aura__reject_action`** — can only **deny** a queued action, never execute one. It rides
-  the default allowlist.
+- **`aura__reject_action`** and **`aura__reject_run`** — can only **deny** queued actions,
+  never execute one. They ride the default (empty) allowlist. A token with an **explicit**
+  `allowedTools` list gets only what the list names, so a read-only/reject-only token must name
+  both.
 
 ## Scope is always enforced
 
@@ -83,3 +85,28 @@ never returned by any tool.
   never commit it. Tracked config files carry only `${AURA_MCP_TOKEN:-}` placeholders, and
   Cursor configs interpolate the env var (`${env:AURA_MCP_TOKEN}`); the one client that must
   embed the token inline (Claude Desktop) keeps its config out of version control.
+
+## A fleet call reaches every site in the token's scope
+
+A site tool called through the gateway runs on **every** connected site the token can see —
+there is no per-call site selection yet. A read runs at once on all of them. Anything the
+gateway does not recognise as a read **queues one approval per site**, and "read" is decided by
+the tool's name: `run_wp_cli` queues whatever the command, and a builder tool whose name does
+not start with a read verb (`get-`, `list-`, …) queues unless Aura declares it a read.
+
+So before calling a tool whose effect you have not seen: assume it will queue on the whole
+fleet. If a call queued by mistake, its result carries a `runId` — clear it with
+`aura__reject_run`, and **do not stop at the first answer**. One call rejects at most 200
+actions and stops before the gateway's deadline; and a run that was still being created when
+you called can gain actions afterwards. Repeat until the answer has `remaining: 0`,
+`more: false`, an empty `notRejected` (or only entries you have looked at) **and**
+`seal: "sealed"`. On `seal: "unsealed"`, call `aura__reject_run` again;
+"nothing pending" on an unsealed run is not the end of it. A run whose creation was cut off is
+never sealed: once the call that created it has returned, call `aura__reject_run` for that
+`runId` one more time, and take its own `NOTHING_PENDING` as the end. Do not use the pending
+list as the proof — it is capped at 200 rows and has no `runId` filter, so a run's actions can
+be waiting outside the page it returned.
+
+Tools seen to run at once (2026-10-05): `check_health`, `get_site_context`,
+`elementor__elementor-mcp-server-info`. `elementor__elementor-mcp-detect-elementor-version` is
+declared a read since `Digitizers/Aura#669`; before that it queued.

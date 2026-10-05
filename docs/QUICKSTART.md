@@ -7,8 +7,8 @@
 Aura → **Fleet** → **Agent Tokens** → new token → check **"allow manage"** → **Copy** the
 `aura_…` token (shown once).
 
-- Read-only / reject-only? **Explicitly allow-list** the read tools + `aura__reject_action` —
-  do NOT leave allowed-tools empty (empty = *unrestricted*, i.e. mutating fleet access too). See
+- Read-only / reject-only? **Explicitly allow-list** the read tools + `aura__reject_action` +
+  `aura__reject_run` — do NOT leave allowed-tools empty (empty = *unrestricted*, i.e. mutating fleet access too). See
   [connect.md](../files/references/connect.md) step 5.
 - Want reverts or machine-approve? See step 4.
 
@@ -47,6 +47,7 @@ the token isn't `canManage`; re-mint with "allow manage".
 - *"What's pending approval?"* → `aura__list_pending_approvals`
 - *"Give me a summary of this client"* → `aura__client_summary`
 - *"Reject action X, it's wrong"* → `aura__reject_action`
+- *"That call queued on every site by mistake — clear it"* → `aura__reject_run` with the call's `runId`
 - *"List snapshots for this site"* → `aura__list_snapshots` (page + file, each row typed)
 - *"Restore snapshot X"* → `aura__restore_snapshot` (client-wide token; a file snapshot also
   needs `aura__restore_snapshot:file`)
