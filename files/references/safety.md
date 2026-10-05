@@ -86,16 +86,22 @@ never returned by any tool.
   Cursor configs interpolate the env var (`${env:AURA_MCP_TOKEN}`); the one client that must
   embed the token inline (Claude Desktop) keeps its config out of version control.
 
-## A fleet call reaches every site in the token's scope
+## Which sites a fleet call runs on
 
-A site tool called through the gateway runs on **every** connected site the token can see —
-there is no per-call site selection yet. A read runs at once on all of them. Anything the
-gateway does not recognise as a read **queues one approval per site**, and "read" is decided by
-the tool's name: `run_wp_cli` queues whatever the command, and a builder tool whose name does
-not start with a read verb (`get-`, `list-`, …) queues unless Aura declares it a read.
+A site tool called through the gateway takes `_sites` — an array of resource ids, or `"all"`
+(see [tools.md](tools.md#naming-the-sites-a-call-runs-on-_sites); ids come from
+`aura__list_sites`). **Name the sites.** Without `_sites`:
 
-So before calling a tool whose effect you have not seen: assume it will queue on the whole
-fleet. If a call queued by mistake, its result carries a `runId` — clear it with
+- a **read** runs at once on **every** connected site the token can see;
+- anything the gateway does not recognise as a read is **refused** — it used to queue one
+  approval per site, and now nothing is queued until the call says which sites, or `"all"`.
+
+"Read" is decided by the tool's name: `run_wp_cli` is not a read whatever the command, and a
+builder tool whose name does not start with a read verb (`get-`, `list-`, …) is not one unless
+Aura declares it. With `_sites: "all"` such a tool queues **one approval per site** in scope.
+
+So for a check on one site, pass that site's id — do not reach for `"all"` to see what a tool
+does. If a call queued by mistake, its result carries a `runId` — clear it with
 `aura__reject_run`, and **do not stop at the first answer**. One call rejects at most 200
 actions and stops before the gateway's deadline; and a run that was still being created when
 you called can gain actions afterwards. Repeat until the answer has `remaining: 0`,
