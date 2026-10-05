@@ -35,7 +35,8 @@ explicit confirmation.
    high-risk `aura__*` writes listed above. For a genuinely read-only (+ deny) token, allow-list
    only the read tools you need — `aura__list_pending_approvals`, `aura__get_action`,
    `aura__list_snapshots`, `aura__list_connections`, `aura__list_runs`, `aura__client_summary`,
-   `aura__list_sites` —
+   `aura__list_sites`, and `find_plugin` if the token should answer where a plugin is installed
+   (a gateway read, but an explicit list must name it) —
    plus `aura__reject_action` and `aura__reject_run` (deny-only, can never execute; name both —
    an explicit list grants only what it names, and `aura__reject_run` is how a fan-out queued by
    mistake is cleared). Leave `allowedTools` empty **only**

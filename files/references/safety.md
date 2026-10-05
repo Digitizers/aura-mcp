@@ -113,6 +113,10 @@ never sealed: once the call that created it has returned, call `aura__reject_run
 list as the proof — it is capped at 200 rows and has no `runId` filter, so a run's actions can
 be waiting outside the page it returned.
 
+To ask where a plugin is installed, use `find_plugin` (see
+[tools.md](tools.md#where-a-plugin-is-installed-find_plugin)) — a read that returns one short
+row per site. Do not reach for `run_wp_cli plugin get …`: it is never a read.
+
 Tools seen to run at once (2026-10-05): `check_health`, `get_site_context`,
 `elementor__elementor-mcp-server-info`. `elementor__elementor-mcp-detect-elementor-version` is
 declared a read since `Digitizers/Aura#669`; before that it queued.

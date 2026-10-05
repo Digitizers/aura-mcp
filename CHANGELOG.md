@@ -13,6 +13,9 @@ the `aura__*` control-plane tool surface shipped by the Aura fleet gateway.
   `references/safety.md`. Shipped by the gateway in `Digitizers/Aura#669`: rejects every
   still-pending action of one run in a single call, and reports what it could not reject and
   whether the run was sealed.
+- **`find_plugin`** — shipped by the gateway in `Digitizers/Aura#672`: where a plugin is
+  installed across the fleet, one short row per site. Documented in `references/tools.md` and
+  `references/safety.md`, with a `QUICKSTART.md` example.
 - **`_sites` and `aura__list_sites`** — shipped by the gateway in `Digitizers/Aura#671`. A site
   tool call names the sites it runs on (`_sites`: resource ids, or `"all"`); a tool that queues
   is refused without it. `aura__list_sites` lists the ids. Documented in `references/tools.md`,
