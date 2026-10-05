@@ -47,6 +47,7 @@ the token isn't `canManage`; re-mint with "allow manage".
 - *"What's pending approval?"* → `aura__list_pending_approvals`
 - *"Give me a summary of this client"* → `aura__client_summary`
 - *"Which sites can this token reach?"* → `aura__list_sites` (the ids a site tool's `_sites` takes)
+- *"Where is plugin X installed, and at what version?"* → `find_plugin` with its `slug`
 - *"Reject action X, it's wrong"* → `aura__reject_action`
 - *"That call queued on every site by mistake — clear it"* → `aura__reject_run` with the call's `runId`
 - *"List snapshots for this site"* → `aura__list_snapshots` (page + file, each row typed)

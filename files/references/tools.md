@@ -94,6 +94,27 @@ Each site tool's schema in `tools/list` says which case it is: `_sites` is descr
 
 ---
 
+## Where a plugin is installed (`find_plugin`)
+
+Also not an `aura__*` tool: a **site tool the gateway itself offers**, for the question that
+comes before every rollout — on which sites is plugin X installed, at what version, active or
+not. It runs each selected site's `get_site_context` and returns only that plugin's entry, so
+the answer for a whole fleet is one short row per site rather than every site's full context.
+
+- **Args:** `slug` (string, **required**) — the plugin's directory slug (`elementor`) or its
+  file path (`elementor/elementor.php`); `_sites?` as for any site tool.
+- **Returns:** `{ tool: "find_plugin", slug, installedOn, answered, sitesInScope, sitesSelected, runId, sites: [{ resourceId, status, plugin? }] }`
+  - `plugin` — `{ installed: true, version, active, file, name }`, `{ installed: false }`, or
+    `{ installed: null, reason }` when the site answered without a plugin list.
+  - A site whose `status` is not `completed` has **no `plugin`**. Neither it nor an
+    `installed: null` row means "not installed": `answered` counts only the sites that gave a
+    verdict, and the text says how many did not.
+- A read: it runs at once, queues nothing, and without `_sites` reaches every site in scope.
+- An explicit `allowedTools` list must name `find_plugin` to use it.
+- Listed only when at least one site in scope offers `get_site_context`.
+
+---
+
 ## Writes (governed — read [safety.md](safety.md) first)
 
 ### `aura__reject_action` — safe write
