@@ -66,7 +66,9 @@ nothing about the ordinary revert rules above changes for it.
 
 - **All reads** (`list_*`, `get_action`, `client_summary`) — zero mutation risk.
 - **`aura__reject_action`** and **`aura__reject_run`** — can only **deny** queued actions,
-  never execute one. They ride the default allowlist.
+  never execute one. They ride the default (empty) allowlist. A token with an **explicit**
+  `allowedTools` list gets only what the list names, so a read-only/reject-only token must name
+  both.
 
 ## Scope is always enforced
 
@@ -94,6 +96,15 @@ not start with a read verb (`get-`, `list-`, …) queues unless Aura declares it
 
 So before calling a tool whose effect you have not seen: assume it will queue on the whole
 fleet. If a call queued by mistake, its result carries a `runId` — clear it with
-`aura__reject_run`. Tools seen to run at once (2026-10-05): `check_health`, `get_site_context`,
+`aura__reject_run`, and **do not stop at the first answer**. One call rejects at most 200
+actions and stops before the gateway's deadline; and a run that was still being created when
+you called can gain actions afterwards. Repeat until the answer has `remaining: 0`,
+`more: false`, an empty `notRejected` (or only entries you have looked at) **and**
+`seal: "sealed"`. On `seal: "unsealed"`, check `aura__list_pending_approvals` and call again;
+"nothing pending" on an unsealed run is not the end of it. A run whose creation was cut off is
+never sealed: once the call that created it has returned and `aura__list_pending_approvals`
+shows none of its actions, it is cleared.
+
+Tools seen to run at once (2026-10-05): `check_health`, `get_site_context`,
 `elementor__elementor-mcp-server-info`. `elementor__elementor-mcp-detect-elementor-version` is
 declared a read since `Digitizers/Aura#669`; before that it queued.
