@@ -57,6 +57,41 @@ One-shot situational snapshot of the token's client scope.
 - **Returns:** `{ summary: { resourceCount, connectionCount, pendingApprovals, snapshotCount } }`
 - `snapshotCount` counts page and file rollback points together.
 
+### `aura__list_sites`
+The connected WordPress sites in the token's scope — exactly the set a site tool call can run
+on. This is where the ids for a site tool's `_sites` argument come from (see
+[Naming the sites a call runs on](#naming-the-sites-a-call-runs-on-_sites)).
+- **Args:** `limit?` (int), `cursor?` (string — the `nextCursor` of the previous page)
+- **Returns:** `{ sites: [{ resourceId, displayName, wpUrl, status, packTags }], total, nextCursor }`
+- Ordered by `resourceId` and paged with a **cursor**, unlike the other lists: when
+  `nextCursor` is not `null`, call again with `cursor` set to it. `total` is the number of
+  connected sites in scope, whatever the page size.
+- A pack-scoped token sees only its pack's sites. Never credentials.
+
+---
+
+## Naming the sites a call runs on (`_sites`)
+
+Not an `aura__*` tool: an argument the gateway adds to **every site tool** (ops, a builder's
+`<builder>__*`, `content__*`). The gateway reads it and removes it; the site never sees it.
+
+- **`_sites: ["<resourceId>", …]`** — run on exactly these sites (1–200 ids).
+- **`_sites: "all"`** — run on every connected site in the token's scope, said on purpose.
+- **Omitted on a read** — runs on every site in scope, as before.
+- **Omitted on a tool that queues** — **refused** (`-32602`), nothing is queued. Name the
+  sites, or pass `"all"`.
+- **Whole or nothing.** If one id is not a connected site in the token's scope, the call is
+  refused and the id is named; it is never narrowed to the ids that did resolve. An id outside
+  the scope and an id that does not exist get the same answer.
+- **Malformed** (an empty array, a bare id string, a non-string entry) is refused the same way.
+- `_sites` on a tool that is not a site tool (`aura__*`, `memory_*`, `infra__*`) is refused,
+  never ignored.
+- Every site-tool result carries `sitesInScope` and `sitesSelected`, and each entry of `sites`
+  carries its `resourceId`.
+
+Each site tool's schema in `tools/list` says which case it is: `_sites` is described as
+"Optional … Omit to run on all N site(s)" for a read and "Required …" for a tool that queues.
+
 ---
 
 ## Writes (governed — read [safety.md](safety.md) first)
@@ -70,7 +105,7 @@ execute one, so it rides the default allowlist (no explicit opt-in needed).
 
 ### `aura__reject_run` — safe write
 Reject **every action of one run that is still awaiting approval**, in one call. A fleet call
-that queues does so on every site in scope under one `runId`; this is how a fan-out queued by
+that queues does so on every site it selected under one `runId`; this is how a fan-out queued by
 mistake is cleared without one `aura__reject_action` per site. Like `aura__reject_action` it
 can only **deny**, so it rides the default allowlist.
 - **Args:** `runId` (string, **required**), `reason?` (string, ≤500 chars, recorded on each action)

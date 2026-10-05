@@ -49,6 +49,7 @@ What would you like to do with your Aura agency?
   4. List provider connections         → aura__list_connections
   5. List recent agent runs            → aura__list_runs
   6. Client situational summary        → aura__client_summary
+     List the sites a call can target  → aura__list_sites           (the resource ids a site tool's _sites takes)
 
   WRITE (governed — see safety notes)
   7. Reject a pending action           → aura__reject_action        (safe: only denies)
@@ -72,6 +73,7 @@ Quick map (R = read, W = write, W! = high-risk revert/execute):
 | `aura__list_connections` | R | Provider connections + validation status (never credentials) |
 | `aura__list_runs` | R | Recent runs (actions grouped by `runId`) |
 | `aura__client_summary` | R | One-shot counts: resources, connections, pending, snapshots (page + file together) |
+| `aura__list_sites` | R | Connected sites in scope, with the `resourceId` a site tool's `_sites` argument takes; cursor-paged |
 | `aura__reject_action` | W | Deny a pending action so it never runs (safe — only denies) |
 | `aura__reject_run` | W | Deny every still-pending action of one run (safe — only denies); up to 200 per call, reports what it could not reject and whether the run was sealed |
 | `aura__restore_snapshot` | W! | Roll a page **or file** back to a snapshot (client-wide token only; a file id also needs `aura__restore_snapshot:file`) |

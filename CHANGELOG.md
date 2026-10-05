@@ -13,9 +13,13 @@ the `aura__*` control-plane tool surface shipped by the Aura fleet gateway.
   `references/safety.md`. Shipped by the gateway in `Digitizers/Aura#669`: rejects every
   still-pending action of one run in a single call, and reports what it could not reject and
   whether the run was sealed.
-- **`safety.md`: a fleet call reaches every site in the token's scope.** What queues and what
-  runs at once, and how to clear a fan-out queued by mistake. Written after one session queued
-  76 approvals with two read-shaped calls (`Digitizers/Aura#667`).
+- **`_sites` and `aura__list_sites`** — shipped by the gateway in `Digitizers/Aura#671`. A site
+  tool call names the sites it runs on (`_sites`: resource ids, or `"all"`); a tool that queues
+  is refused without it. `aura__list_sites` lists the ids. Documented in `references/tools.md`,
+  `references/safety.md`, `SKILL.md`, `README.md`, and the token recipes.
+- **`safety.md`: which sites a fleet call runs on.** What runs at once, what queues, and how to
+  clear a fan-out queued by mistake. Written after one session queued 76 approvals with two
+  read-shaped calls (`Digitizers/Aura#667`).
 
 ## [0.2.0] — 2026-07-21
 
