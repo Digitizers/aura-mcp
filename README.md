@@ -39,6 +39,8 @@ can run standalone or orchestrate across a whole client fleet from a single dash
 The others acquire and operate; **aura-mcp is the capstone** — it governs the whole fleet from
 your editor.
 
+**→ Prefer to have it done for you?** [Digitizer](https://www.digitizer.studio/aura-siteagent-ops-layer/), the team behind these tools, sets it up and runs it for your sites.
+
 ## What's inside
 
 ```
